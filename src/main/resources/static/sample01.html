@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+		    .css01 {
+	             background: #FFDBC1;
+	        }
+	        
+		   
+		    
+</style>
+<meta charset="UTF-8" />
+<title>Insert title here</title>
+<script src="../js/jquery-2.2.4.min.js"></script>
+</head>
+<body>
+	<div>
+		영문(대문자),숫자만 입력가능
+		<input type="text" id="CENTER_PREFIX" name="CENTER_PREFIX" 
+		maxlength="4" oninput="this.value=this.value.replace(/[a-zㄱ-힣~!@#$%^&*()_+|<>?:{}= ]/g,'');"
+		placeholder="소문자,한글 입력안됨" />
+	</div>
+	
+	<div class="css01">
+	css적용
+	</div>
+	asdf
+	<div>
+	</div>
+	<div class="css01">
+	123
+	</div>
+</body>
+<script type="text/javascript"> 
+
+</script> 
+</html>

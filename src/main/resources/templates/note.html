@@ -1,0 +1,158 @@
+<div id="_web2DivPopupcontainer" class="inner-body" style="height: 350px; width: 600px;">
+
+	<div id="_web2DivPopupTitle">
+
+		<div class="alert_pop_btns">
+
+			<div id="divOpenPopupTitle">데이터 입력창</div>
+			<input type="image" src="../../images/button/btn_popClose.png" id="_web2DivPopupBtn" class="btn btn-sm btn-bk btn-popClose">
+
+		</div>
+	</div>
+
+	<div id="_web2DivPopupContent">
+
+<!--
+/**********************************************************************************************************************
+* File name   : WMSLIST002_064_POP.html
+* Page name   : 데이터 입력창 
+* Description : 물류센터관리 - 기초현황 - 입고내역서 - 확인서버튼에서,뜨는 팝업
+				BNP, WWBLST064.jsp
+* - 
+***********************************************************************************************************************
+*	Modifiy Date	Auth		    
+***********************************************************************************************************************
+*	2023-04-19		lsy			    init.
+**********************************************************************************************************************/
+ -->
+
+
+
+
+	
+		<meta charset="UTF-8">
+	
+	
+	
+		<div id="wrap" style="min-width: 500px;">
+			<div class="contents pop_contents">
+			
+				<div class="top">
+					<div class="tr_btns">
+						
+						<th:if test="${AUT_INQ_TAG=='Y'}">
+							<button id="hwac_print" class="default"><span>확인서</span></button>
+						</th:if>
+					</div>
+				</div>
+				
+				<div class="top2_bd_box">
+					<table class="df_vertical_tb">
+						<colgroup>
+								<col width="30%">
+								<col width="70%">
+						</colgroup>
+						<tbody><tr>
+							<th>1.사용목적</th>
+							<td>
+								<input type="text" id="Use_Purpose" name="Use_Purpose" size="50" maxlength="50" style="border:0;">
+							</td>
+						</tr>
+						
+						<tr>
+							<th>2.현품확인사항</th>
+							<td>
+								<textarea id="Item_Confirm" name="Item_Confirm" cols="50" rows="3" style=" border: 0;"></textarea>
+							</td>
+						</tr>
+						
+						<tr>
+							<th>3.기타사항</th>
+							<td>
+								<textarea id="Gita" name="Gita" cols="50" rows="5" style=" border: 0;"></textarea>
+							</td>
+						</tr>
+						
+					</tbody></table>
+				</div>
+				
+				
+			</div>
+		</div>
+	
+	
+	<script>
+/*<![CDATA[*/
+	
+/*]]>*/
+
+		//조회 시 한번만 선언
+		var pgmCd = document.getElementById('pgmCd').innerHTML;
+		
+		
+		$(document).ready(
+				function() {
+					//그리드 생성 및 셋팅
+				
+					
+					setEvent_pop();
+					
+					defaultSetting_pop();
+					
+					//title
+				    $('#divOpenPopupTitle').text("데이터 입력창");
+					
+					//팝업 드래그 기능추가
+				    $.popup._dragElement(document.getElementById("_web2DivPopupcontainer"));
+				}
+			);
+		
+		
+		function defaultSetting_pop() {
+			
+			$('#_web2DivPopupcontainer').css('height', '350px');
+			
+			$("#Use_Purpose").val("화주 요청에 의한 장치 확인용");
+			$("#Item_Confirm").val("외포장 이상 없음(내품 이상 유무는 화주 감정에 준함)");
+			
+		}
+	
+		
+		function setEvent_pop(){
+		
+			
+		    $("#hwac_print").on("click", function() {
+		    	hwacReport();
+			});
+			
+		}
+		
+		function hwacReport() {
+			
+			var reportFileName="WMSBLST062R";
+    		var PATH = "/WMS/BLST/report/"; 
+    		var PARAM = "reportFileName=" + reportFileName
+    						 +"&CENTER_CD="+CENTER_CD
+    						 +"&IN_ORD_NO="+in_ord_no
+    						 +"&USE_PURPOSE="+$("#Use_Purpose").val()
+    						 +"&ITEM_CONFIRM="+$("#Item_Confirm").val()
+    						 +"&GITA="+$("#Gita").val()
+    						 +"&PATH="+PATH;
+    		
+    		commonPrint_Agent('jasper', PARAM, 'Normal');
+		}
+		
+		
+		
+		
+		
+		
+
+
+	</script>
+	
+<!-- <div layout:fragment="content"> 끝 -->
+
+	</div>
+
+</div>

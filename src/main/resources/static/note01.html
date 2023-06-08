@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>Insert title here</title>
+</head>
+<body>
+
+</body>
+
+<script>
+//출고구분 선택
+var ORD_TYP = "";
+
+if( SRC_ORD_TYP_B.checked ){
+	ORD_TYP = ORD_TYP + "'B',"; 
+}
+
+if( SRC_ORD_TYP_IT.checked ){
+	ORD_TYP = ORD_TYP + "'IT',"; 
+}
+
+if( SRC_ORD_TYP_N.checked ){
+	ORD_TYP = ORD_TYP + "'N',"; 
+}
+
+if ( SRC_ORD_TYP_O.checked ){
+	ORD_TYP = ORD_TYP + "'O',"; 
+}
+if( SRC_ORD_TYP_OT.checked ){
+	ORD_TYP = ORD_TYP + "'OT',"; 
+}
+if( SRC_ORD_TYP_S.checked ){
+	ORD_TYP = ORD_TYP + "'S',"; 
+}
+
+if(ORD_TYP == ""){
+	$().toastmessage('showToast', { 
+		text     : '출고구분을 선택하세요.',
+		type     : 'error'
+	});
+	$("#SRC_ORD_TYP_B").focus();
+	return;
+}
+
+ORD_TYP = ORD_TYP.substring(0, (ORD_TYP.length-1));
+
+ORD_TYP = "AND A.ORD_TYP IN ("+ORD_TYP+")";
+
+var jRowsData = gfnSaveData(TempGrid);
+
+var saveData = {"savedstMs": jRowsData };
+
+$.tx.ajax("POST", "/WMSLIST003RptSave.do", saveData
+		, function(result){
+			 $().toastmessage('showToast', {
+ 				    text     : '저장 하였습니다.',
+ 				    type     : 'success'
+ 			 });
+		}
+		, function(result){
+			$().toastmessage('showToast', {
+				    text     : result.message, 
+				    type     : 'error'
+				});
+		}
+); 
+
+var ITEM_RTON = "";
+if ( RTON_SHOW.checked ) {
+	ITEM_RTON = "T";
+}else{
+	ITEM_RTON = "F";
+}
+//var CENTER_CD  	= $("#SRC_CENTER_CD").val();
+var SRC_FROM_DT	= $("#S_FR_DT").val().replace(/-/gi,""); 
+var SRC_TO_DT	= $("#S_TO_DT").val().replace(/-/gi,""); 
+
+//화주검색
+if( $("#SRC_CUST_CD").val() != "" && $("#SRC_CUST_NM").val() != "" ){
+	var CUST = "AND A.CUST_CD = '" + $("#SRC_CUST_CD").val() + "'";
+}else{
+	var CUST = "";
+}
+
+//SHIPPER검색
+if( $("#SRC_SHIPPER_CD").val() != "" && $("#SRC_SHIPPER_NM").val() != ""){
+	var SHIPPER = "AND SHIPPER_CD = '" + $("#SRC_SHIPPER_CD").val() + "'";
+}else{
+	var SHIPPER = '';
+}
+
+//BL 검색
+// 수출입 BL NO
+if( $("#SRC_BL_NO").val() != ''){
+	var BL_NO = "AND D.BL_NO = '" + $("#SRC_BL_NO").val() + "'";
+}else{
+	var BL_NO = '';
+}
+
+// 입출고 화물구분
+if( $("#OUT_ORD_KND").val() != ''){
+	var OUT_ORD_KND = "AND A.OUT_ORD_KND = '" + $("#OUT_ORD_KND").val() + "'";
+}else{
+	var OUT_ORD_KND = '';
+}
+
+
+
+//BL분할 표시
+if( $("input[name='SRC_BL']:checked").val() == ''){
+	var BL = "";
+}else if($("input[name='SRC_BL']:checked").val() == '1'){
+	var BL = "AND A.OUT_ORD_KND = '63'";
+}else{
+	var BL = "AND A.OUT_ORD_KND <> '63'";
+}
+
+//제품명 검색
+if( $("#S_ITEM_CD").val().trim() != "" ) {
+	var ITEM_NM = "AND D.ITEM_CD = '"+ $("#S_ITEM_CD").val() + "'";
+}else{
+	var ITEM_NM = '';
+}
+
+//MRN 검색
+if( $("#SRC_MRN").val().trim() != ""){
+	var MRN = "AND SUBSTR(G.CARGO_MGNT_NO, 1 ,11) = '" + $("#SRC_MRN").val() + "'";
+}else{
+	var MRN = '';
+}
+
+//MSN 검색
+if( $("#SRC_MSN").val().trim() != ""){
+	var MSN = "AND SUBSTR(G.CARGO_MGNT_NO, 12 ,4) = '" + $("#SRC_MSN").val() + "'";
+}else{
+	var MSN = '';
+}
+
+//검색 조건 표시
+var src_cond = '';
+//화주
+var SRC_CUST_NM	= $("#SRC_CUST_NM").val();
+if(SRC_CUST_NM != ''){
+	src_cond = src_cond + "화주 : " + SRC_CUST_NM + "  ";
+}
+//shipper			
+var SRC_SHIPPER_NM = $("#SRC_SHIPPER_NM").val();
+if(SRC_SHIPPER_NM != ''){
+	src_cond = src_cond + "SHIPPER : " + SRC_SHIPPER_NM + "  ";
+}
+
+//BL분할
+if ( $("input[name='SRC_BL']:checked").val() == '1'){
+	src_cond = src_cond + "BL 분할 : 표시  "
+} else if ( $("input[name='SRC_BL']:checked").val() == '2'){
+	src_cond = src_cond + "BL 분할 : 표시 안함  "
+}
+
+var ord_typ_cond = '';
+
+if( SRC_ORD_TYP_B.checked ){
+	ord_typ_cond = ord_typ_cond + "  보세화물";
+}
+
+if( SRC_ORD_TYP_N.checked ){
+	ord_typ_cond = ord_typ_cond + "  내국화물";
+}
+if( SRC_ORD_TYP_O.checked ){
+	ord_typ_cond = ord_typ_cond + "  수출화물";
+}
+if( SRC_ORD_TYP_S.checked ){
+	ord_typ_cond = ord_typ_cond + "  적출화물";
+}
+
+var reportFileName="WMSBLST070R";
+var PATH = "/WMS/BLST/report/"; 
+var PARAM = "reportFileName=" + reportFileName
+				 +"&CENTER_CD="+CENTER_CD
+				 +"&SRC_FROM_DT="+SRC_FROM_DT
+				 +"&SRC_TO_DT="+SRC_TO_DT
+				 +"&CUST="+CUST
+				 +"&SHIPPER="+SHIPPER
+				 +"&BL_NO="+BL_NO
+				 +"&BL="+BL
+				 +"&OUT_ORD_KND="+OUT_ORD_KND
+				 +"&ORD_TYP="+ORD_TYP
+				 +"&MRN="+MRN
+				 +"&SRC_COND="+src_cond
+				 +"&ORD_TYP_COND="+ord_typ_cond
+				 +"&MSN="+MSN
+				 +"&ITEM_NM="+ITEM_NM
+				 +"&ITEM_RTON="+ITEM_RTON
+				 +"&PATH="+PATH;
+
+commonPrint_Agent('jasper', PARAM, 'Normal');
+</script>
+</html>

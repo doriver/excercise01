@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+	<select id="SearchList" parameterType="HashMap" resultType="java.util.LinkedHashMap">
+	/* WMSLIST001Mapper SearchList */
+		SELECT  A.CENTER_CD,
+		        A.CUST_CD,
+		        FN_GET_CUST_NM(A.CUST_CD) AS CUST_NM,
+		        A.SHIPPER_CD,
+		        FN_GET_CUST_NM(A.SHIPPER_CD) AS SHIPPER_NM,
+		        A.ORD_TYP,
+		        FN_GET_CODE_NM('W0', A.ORD_TYP) ORD_TYP_NM,
+		        A.IN_ORD_KND,
+		        FN_GET_CODE_NM('W1', A.IN_ORD_KND) IN_ORD_KND_NM,
+		        A.IN_ORD_NO,
+		        A.IN_ORD_DT,
+		        A.IN_NO,
+		        A.ITEM_CD,
+		        NVL(A.ITEM_NM,FN_GET_ITEM_NAME(A.ITEM_CD)) AS ITEM_NM,
+		        A.IN_DT,
+		        A.BL_NO,
+		        A.IN_QTY,
+		        A.IN_WGT,
+		        A.IN_CBM,
+		        A.IN_CNTR_SIZE,
+		        FN_GET_CODE_NM('S5', A.IN_CNTR_SIZE) IN_CNTR_SIZE_NM,
+		        A.IN_CNTR_CNT,
+		        A.OUT_NO,
+		        A.OUT_DT,
+		        A.OUT_QTY,
+		        A.OUT_WGT,
+		        A.OUT_CBM,
+		        A.OUT_CNTR_SIZE,
+		        FN_GET_CODE_NM('S5', A.OUT_CNTR_SIZE) OUT_CNTR_SIZE_NM,
+		        A.OUT_CNTR_CNT,
+		        A.ETD,
+		        FN_GET_LINER_NM(A.LINE_CD) AS LINE_NM,
+		        A.CARGO_MGNT_NO,
+		        A.BIGO,
+		        FN_GET_CODE_NM('W2', A.PROC_STATE_I) PROCSTATE_NM_I,
+		        FN_GET_CODE_NM('WX', A.PROC_STATE_O) PROCSTATE_NM_O,
+		        DBMS_LOB.SUBSTR( FN_GET_PO_PRO_NO2 (A.IN_ORD_NO, 'PO'), 500)  AS PO_NM,
+		        DBMS_LOB.SUBSTR( FN_GET_PO_PRO_NO2 (A.IN_ORD_NO, 'PRO'), 500)  AS PRO_NM
+
+		  FROM (SELECT  A.CENTER_CD,
+		                A.IN_ORD_NO,
+		                '' AS IN_NO,
+		                B.ITEM_CD,
+		                B.ITEM_NM,
+		                A.CUST_CD,
+		                A.PROC_STATE AS PROC_STATE_I,
+		                A.SHIPPER_CD,
+		                A.IN_ORD_DT,
+		                '' AS IN_DT,
+		                A.BL_NO,
+		                A.ORD_TYP,
+		                A.IN_ORD_KND,
+		                A.ETD,
+		                A.LINE_CD,
+		                A.CARGO_MGNT_NO,
+		                B.CNTR_SIZE AS IN_CNTR_SIZE,
+		                (SELECT COUNT(DISTINCT S.CNTR_NO)
+		                   FROM WH_IN_ORDER_D S
+		                  WHERE S.IN_ORD_NO = A.IN_ORD_NO ) AS IN_CNTR_CNT,
+		                B.IN_ORD_QTY AS IN_QTY,
+		                B.IN_ORD_WGT AS IN_WGT,
+		                B.IN_ORD_CBM AS IN_CBM,
+		                A.BIGO,
+		                '' AS PROC_STATE_O,
+		                '' AS OUT_NO,
+		                '' AS OUT_DT,
+		                0 AS OUT_QTY,
+		                0 AS OUT_WGT,
+		                0 AS OUT_CBM,
+		                '' AS OUT_CNTR_SIZE,
+		                0 AS OUT_CNTR_CNT
+		          FROM  WH_IN_ORDER_M A,
+		                WH_IN_ORDER_D B
+		         WHERE  A.IN_ORD_NO = B.IN_ORD_NO
+		           AND  A.PROC_STATE <![CDATA[<=]]> '2'
+		           AND  A.CENTER_CD = #{SRC_CENTER_CD}
+		           AND  A.IN_ORD_DT BETWEEN TO_CHAR(TO_DATE(#{S_IN_FR_DT},'YYYY-MM-DD'),'YYYYMMDD') AND TO_CHAR(TO_DATE(#{S_IN_TO_DT},'YYYY-MM-DD'),'YYYYMMDD')
+ 				<if test="SRC_CUST_CD != null and SRC_CUST_CD != ''">
+    			   AND  A.CUST_CD = #{SRC_CUST_CD}
+       			</if>
+       			<if test="SRC_SHIPPER_CD != null and SRC_SHIPPER_CD != ''">
+    				   AND A.SHIPPER_CD = #{SRC_SHIPPER_CD}
+       			</if>
+       			 <if test="SRC_ORD_TYP != null and SRC_ORD_TYP != ''">
+    				   AND A.ORD_TYP = #{SRC_ORD_TYP}
+       			 </if>
+       			 <if test="SRC_ITEM_NM != null and SRC_ITEM_NM != ''">
+    				   AND B.ITEM_NM LIKE '%'||#{SRC_ITEM_NM}||'%'
+       			 </if>
+       			 
+       			
+ 				 
+ 			<if test="IN_OUT_NO != null and IN_OUT_NO != ''">
+ 				 <choose>
+    				<when test='Gubun.equals("1")'>
+    				   AND A.IN_ORD_NO =#{IN_OUT_NO}				   
+    				</when>
+    				
+    				<when test='Gubun.equals("2")'>
+    				   AND A.IN_ORD_NO =#{IN_OUT_NO}				   
+    				</when>
+    				<when test='Gubun.equals("3")'>
+    				   AND A.BL_NO =#{IN_OUT_NO}				   
+    				</when>
+    				
+    			</choose>
+ 			</if>		 
+    				
+    			<choose>
+    				<when test="IN_CHK == 'true' and OUT_CHK == 'false'">
+    				  AND A.IN_ORD_NO <![CDATA[>]]>	''	   
+    				</when>
+    				
+    				<when test='IN_CHK == "false" and OUT_CHK == "true"'>
+    				  AND ROWNUM = 0	   
+    				</when>
+       			</choose>
+       			
+		  		 <if test="SRC_PROC_STATE != null and SRC_PROC_STATE != ''">
+    				 AND A.PROC_STATE = #{SRC_PROC_STATE}
+       			 </if>
+       			 
+		        UNION ALL
+		        SELECT  A.CENTER_CD,
+		                A.IN_ORD_NO,
+		                A.IN_NO,
+		                A.ITEM_CD,
+		                A.ITEM_NM,
+		                A.CUST_CD,
+		                A.PROC_STATE AS PORC_STATE_I,
+		                A.SHIPPER_CD,
+		                A.IN_ORD_DT,
+		                A.IN_DT,
+		                A.BL_NO,
+		                A.ORD_TYP,
+		                A.IN_ORD_KND,
+		                A.ETD,
+		                A.LINE_CD,
+		                A.CARGO_MGNT_NO,
+		                A.IN_CNTR_SIZE,
+		                A.IN_CNTR_CNT,
+		                A.IN_QTY,
+		                A.IN_WGT,
+		                A.IN_CBM,
+		                A.BIGO,
+		                (SELECT S.PROC_STATE
+		                   FROM WH_OUT_ORDER_M S,
+		                        WH_OUT_M X
+		                  WHERE S.OUT_ORD_NO = X.OUT_ORD_NO
+		                    AND X.OUT_NO = B.OUT_NO) AS PORC_STATE_O,
+		                B.OUT_NO,
+		                B.OUT_DT,
+		                B.OUT_QTY,
+		                B.OUT_WGT,
+		                B.OUT_CBM,
+		                B.CNTR_SIZE AS OUT_CNTR_SIZE,
+		                (SELECT COUNT(DISTINCT S.CNTR_NO) 
+		                   FROM WH_OUT_LOC_INFO S
+		                  WHERE B.OUT_NO = S.OUT_NO
+		                    AND B.ITEM_CD = S.ITEM_CD
+		                    AND B.ITEM_SEQ = S.ITEM_SEQ
+		                    AND B.LOC_NO = S.LOC_NO) AS OUT_CNTR_CNT
+		          FROM (SELECT  A.CENTER_CD,
+		                        A.IN_ORD_NO,
+		                        E.IN_NO,
+		                        E.ITEM_CD,
+		                        MAX(E.ITEM_NM) AS ITEM_NM,
+		                        MAX(A.CUST_CD) AS CUST_CD,
+		                        MAX(C.PROC_STATE) AS PROC_STATE,
+		                        MAX(A.IN_ORD_DT) AS IN_ORD_DT,
+		                        MAX(A.SHIPPER_CD) AS SHIPPER_CD,
+		                        MAX(C.IN_DT) AS IN_DT,
+		                        MAX(A.BL_NO) AS BL_NO,
+		                        MAX(A.ORD_TYP) AS ORD_TYP,
+		                        MAX(A.IN_ORD_KND) AS IN_ORD_KND,
+		                        MAX(A.ETD) ETD,
+		                        MAX(A.LINE_CD) AS LINE_CD,
+		                        MAX(A.CARGO_MGNT_NO) CARGO_MGNT_NO,
+		                        MAX(E.CNTR_SIZE) AS IN_CNTR_SIZE,
+		                        COUNT(DISTINCT E.CNTR_NO) AS IN_CNTR_CNT,
+		                        SUM(E.IN_QTY) IN_QTY,
+		                        SUM(E.IN_WGT) IN_WGT,
+		                        SUM(E.IN_CBM) IN_CBM,
+		                        MAX(A.BIGO) BIGO
+		                   FROM WH_IN_ORDER_M A,
+		                        WH_IN_M C,
+		                        WH_IN_LOC_INFO E,
+		                        WH_OUT_LOC_INFO B
+		                  WHERE C.IN_ORD_NO = A.IN_ORD_NO
+		                    AND C.IN_NO = E.IN_NO
+		                    AND E.IN_NO = B.IN_NO(+)
+		                    AND E.ITEM_CD = B.ITEM_CD(+)
+		                    AND E.ITEM_SEQ = B.ITEM_SEQ(+)
+		                    AND A.CENTER_CD = #{SRC_CENTER_CD}
+		                    AND (C.IN_DT BETWEEN TO_CHAR(TO_DATE(#{S_IN_FR_DT},'YYYY-MM-DD'),'YYYYMMDD') AND TO_CHAR(TO_DATE(#{S_IN_TO_DT},'YYYY-MM-DD'),'YYYYMMDD')
+		                       OR B.OUT_DT BETWEEN TO_CHAR(TO_DATE(#{S_OUT_FR_DT},'YYYY-MM-DD'),'YYYYMMDD') AND TO_CHAR(TO_DATE(#{S_OUT_TO_DT},'YYYY-MM-DD'),'YYYYMMDD'))
+		          <if test="SRC_CUST_CD != null and SRC_CUST_CD != ''">
+    				   AND A.CUST_CD = #{SRC_CUST_CD}
+       			 </if>
+       			 
+       			 <if test="SRC_SHIPPER_CD != null and SRC_SHIPPER_CD != ''">
+    				   AND A.SHIPPER_CD = #{SRC_SHIPPER_CD}
+       			 </if>
+       			 <if test="SRC_ORD_TYP != null and SRC_ORD_TYP != ''">
+    				   AND A.ORD_TYP = #{SRC_ORD_TYP}
+       			 </if>
+       			  <if test="SRC_ITEM_NM != null and SRC_ITEM_NM != ''">
+    				   AND E.ITEM_NM LIKE '%'||#{SRC_ITEM_NM}||'%'
+       			 </if>
+
+		
+			     <choose>
+    		   	   	<when test='IN_CHK == "true" and OUT_CHK == "false"'>
+    		   		   AND E.IN_NO  <![CDATA[>]]> ''	   
+    		   		</when>
+    		   		
+    		   		<when test='IN_CHK == "false" and OUT_CHK == "true"'>
+    		   		   AND E.IN_NO  <![CDATA[>]]> ''	   
+    		   		</when>
+    		     </choose>		
+		                 GROUP BY A.CENTER_CD, A.IN_ORD_NO, E.IN_NO, E.ITEM_CD
+		                ) A,
+		                WH_OUT_LOC_INFO B
+		         WHERE A.IN_NO = B.IN_NO(+)
+		           AND A.ITEM_CD = B.ITEM_CD(+)
+		           
+		    <if test="IN_OUT_NO != null and IN_OUT_NO != ''">		    
+		         <choose>
+    				<when test='Gubun.equals("1") '>
+    				  AND A.IN_NO =#{IN_OUT_NO}				   
+    				</when>
+    				
+    				<when test='Gubun.equals("2") '>
+    				  AND B.OUT_NO =#{IN_OUT_NO}				   
+    				</when>
+    				<when test='Gubun.equals("3") '>
+    				  AND A.BL_NO =#{IN_OUT_NO}				   
+    				</when>
+    			</choose>
+		    </if>      
+    				
+    			<choose>
+    				<when test='IN_CHK == "true" and OUT_CHK == "false"'>
+    				  AND B.OUT_NO IS NULL	   
+    				</when>
+    				
+    				<when test='IN_CHK == "false" and OUT_CHK == "true"'>
+    				  AND B.OUT_NO IS NOT NULL	   
+    				</when>
+    			</choose>
+		  
+		        ) A
+		ORDER BY
+		        A.PROC_STATE_I DESC, A.CUST_CD, A.ORD_TYP, A.IN_DT, A.OUT_DT
+	
+	</select>

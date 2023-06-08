@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<style type="text/css">
+		    
+		    .rg-focused-row {
+	            background: #FFDBC1!important;
+	        }
+		
+		    
+	</style>
+	
+	<link rel="stylesheet" href="../js/realgrid/realgrid-style.css" /> 
+    <script type="text/javascript" src="../js/realgrid/realgrid-lic.js"></script>
+	<script type="text/javascript" src="../js/realgrid/realgrid.2.6.2.min.js"></script>
+	
+<meta charset="UTF-8" />
+<title>Insert title here</title>
+</head>
+<body>
+
+	<button id="btn_search" onclick="funcSearch()"><span>서치펑션</span></button>
+	<button id="btn_add"><span>행 추가</span></button>
+	<button id="btn_del" onclick="funcDelRow()"><span>행 삭제</span></button>
+	<button id="btn_clear" onclick="MasterGrid.prv.clearRows()"><span>그리드 클리어</span></button>
+	
+	<div id="MasterGrid" style="width: 600px; height: 300px;" ></div>
+	
+</body>
+
+<script>
+
+var MasterGrid;
+var MasterGridCols;
+
+window.onload = function() {
+  
+	//그리드 생성 및 셋팅
+	setGrid();
+	
+	document.getElementById("btn_add").onclick = function(){ funcAddRow(); }
+	// $("#btn_add").on("click", function(){ funcAddRow(); });
+	
+	
+}
+
+function setGrid(){
+	MasterGridCols = [ 
+		{name: "col01",	fieldName: "col01", header : {text: "칼럼1"},  width: 90},
+		{name: "col02",	fieldName: "col02", header : {text: "칼럼2"},  width: 90},
+		{name: "col03",	fieldName: "col03", header : {text: "칼럼3"},	 width: 90}
+	]; // 배열이랑 , map인가?
+		
+	MasterGrid = gfnInitgrid( document.getElementById('MasterGrid'), MasterGridCols );
+	
+	MasterGrid.grd.displayOptions.useFocusClass = true;
+}
+
+
+function gfnInitgrid ( gridView, columnInfo ) {
+	
+	var prov = new RealGrid.LocalDataProvider(false);
+	prov.setFields(columnInfo);
+	
+	var container = gridView.id;
+
+	var containerView = new RealGrid.GridView(container);
+	containerView.setDataSource(prov);
+	containerView.setColumns(columnInfo);
+	containerView.resetSize();
+	/*
+	containerView.setOptions({
+		datetimeFormat: "yyyy-MM-dd",
+		rowIndicator: {visible: false},
+        stateBar: {visible: true},
+        sort: {enabled: true},
+        panel: {visible: false},
+        sortMode: "explicit",
+        filterMode: "explicit",
+        edit : {
+            insertable : true,
+            appendable : true,
+            updatable: true, 
+            editable: true, 
+            deletable : true,
+            validateOnExit : true,
+            enterToTab : true,
+            deleteRowsConfirm : false,
+            commitWhenExitLast : true,
+            deleteRowsMessage : "삭제하시겠습니까?"
+        },
+        hideDeletedRows: true // deleted행 제외
+    });
+	 */
+	
+
+	prov.setOptions({
+        softDeleting: true
+    });
+		
+	
+	var rtnObj = {};
+	
+	rtnObj.prv= prov;
+	rtnObj.grd= containerView;
+	
+	return rtnObj; 
+}
+
+
+function funcAddRow(){ 
+		
+	var values = []; 
+	var idx = MasterGrid.prv.getRowCount();
+	
+	MasterGrid.prv.insertRow(idx, values); // values없으니까 안되는거 같음, 필수값 아닐까함
+	
+	
+	if(MasterGrid.prv.getRowCount() > 0){
+		MasterGrid.grd.setValue(idx,"col01", "new_" + idx);
+	}
+
+	MasterGrid.grd.setCurrent({ itemIndex: idx });
+}
+
+function funcDelRow(){
+
+	MasterGrid.grd.commit();
+	
+	var rmRow = MasterGrid.grd.getCurrent();
+	
+	MasterGrid.prv.removeRow(rmRow.dataRow);
+	// 이렇게 하니까 삭제 정상적으로 됨
+}
+
+
+function funcSearch() {
+	
+}
+
+//내  용 : 공통조회로직
+//작성자 : LKH
+function gfnSearchMsg(sqlId, searchParm, dataProvider, columns, pgmCd, fnCallback, msgFlag){
+    var messageIn = {}; 
+    var path1 = pgmCd.substr(0,3).toLowerCase();
+    var path2 = pgmCd.substr(3,4).toLowerCase();
+    var realPath = "kr.co.dwlg."+path1+"."+path2+".persistence."+pgmCd+"Mapper."+sqlId;
+    
+    messageIn["cmnSearchMap"] = getMessageSearchJSON(realPath, searchParm);
+
+	$.tx.ajax("POST", "/CmnSearchListJson.do", messageIn
+			, function(result){
+					    dataProvider.clearRows(); // onCurrentChanged 이벤트 발생시키기 위해 데이타 삭제
+				        dataProvider.fillJsonData(result.data.rtn_dst[1]);
+				        //Undo 사용을 위한 Master SavePoint 
+		    			dataProvider.clearSavePoints();
+						dataProvider.savePoint(true);
+				        if(dataProvider.getRowCount()==0){ //조회된 결과가 없으면 입력항목 초기화
+				        	if(msgFlag != "N"){
+					        	 $().toastmessage('showToast', { 
+						             text     : '등록된 자료가 없습니다.',
+						             type     : 'error'
+						         });
+					        }
+				        	var obj = columns;
+				           jQuery.each( obj, function( i, val ) {
+				            if(val.bind_type == "text"){
+				             // GRID -> CONTROL
+				             $("#"+val.bind_obj).val("");
+				            } else if(val.bind_type == "select"){
+				             // GRID -> CONTROL
+				             $("#"+val.bind_obj).val("");
+				            } else if(val.bind_type == "check"){
+				             /* 
+				             TODO
+				             */
+				            } else if(val.bind_type == "radio"){
+				             /* 
+				             TODO
+				             */
+				            }
+				           });
+				        }else{
+				        	if(msgFlag != "N"){
+				        		$().toastmessage('showToast', { 
+					             text     : '조회 되었습니다.',
+					             type     : 'success'
+					         });
+				        	}
+				        };
+				        
+				        if(fnCallback!=null && typeof fnCallback == 'function'){
+							 fnCallback();
+						}
+				       
+	       	  }
+	         , function(result){ //error
+					alert("error");
+	       	   }
+	          , false //sync
+	       );
+
+	
+}
+
+function getMessageSearchJSON(sql_id, ar){
+	var searchMsg = {};
+
+	searchMsg.SQL_ID    = sql_id;
+	searchMsg.CONDITION = ar;
+	return searchMsg;
+}
+
+function fn_getJsonParamBox(ar){
+	var JboxArray = new Array();
+	Jbox = new Object();
+	$.each(ar, function (idx, item){
+		if (typeof ar[idx] == "object")
+		{
+			var key = ar[idx].attr("id");
+			Jbox[key] = ar[idx].val() == null? '' : ar[idx].val();
+
+		}else{
+			var key = ar[idx].substring(ar[idx].indexOf("^")+1,ar[idx].length);
+			Jbox[key] = ar[idx].substring(0,ar[idx].indexOf("^")) == null? '': ar[idx].substring(0,ar[idx].indexOf("^"));
+		}
+	});
+	JboxArray.push(Jbox);
+	return JboxArray
+};
+</script>
+
+</html>

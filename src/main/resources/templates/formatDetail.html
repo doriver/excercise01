@@ -1,0 +1,174 @@
+<!--
+/**********************************************************************************************************************
+* File name   : html파일이름.html
+* Page name   : 화면이름
+* Description : 물류센터관리 - 기초현황 - DO수취번호관리
+* - 
+***********************************************************************************************************************
+*	Modifiy Date	Auth		    
+***********************************************************************************************************************
+*	2023-02-14		lsy			    init.
+**********************************************************************************************************************/
+ -->
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org">
+
+	<head>
+		<meta charset="UTF-8" />
+	</head>
+	
+<div th:replace="/fwk/layouts/js.inc.html"></div>
+	
+<div layout:fragment="content">
+	
+	<body id=body>
+		<div id="wrap">
+			<div class="contents">
+			
+				<div class="top">
+					<h1><div th:text="${pgmNm}"/></h1>
+					<div id="pgmCd" th:text="${pgmcd}"/>
+					
+					<div class="tr_btns">
+						<button id="btn_search" class="blue"><span>조회</span></button>
+						<button id="btn_excel"class="green"><span>엑셀</span></button>
+						<button id="btn_save" class="sblue"><span>저장</span></button>
+					</div>
+				</div>
+				
+				<div class = "cnt_schV">
+					<table cellpadding="0" cellspacing="0" class="search">
+						<colgroup>
+							<col width="10%">
+							<col width="21%">
+							<col width="10%">
+							<col width="24%">
+							<col width="10%">
+							<col width="25%">
+						</colgroup>
+						<tr>
+							<th></th>
+							<td></td>
+							<th></th>
+							<td></td>
+							<th></th>
+							<td></td>							
+						</tr>  <!--  이게 한줄 , tr안에 들어있는게 한줄( 행 )  -->
+						<tr>
+							<th></th>
+							<td></td>
+							<th></th>
+							<td></td>
+							<th></th>
+							<td></td>							
+						</tr>
+					</table>
+				</div>
+				
+				<div id="MasterGrid" class = "grid_wrap" style="width: 100%; height: 200px; margin-top:15px;"> </div>
+				
+			</div>
+		</div>
+	</body>
+	
+	<script th:inline="javascript">
+/*<![CDATA[*/
+	
+/*]]>*/
+
+		//조회 시 한번만 선언
+		var pgmCd = document.getElementById('pgmCd').innerHTML;
+		
+		//realgrind관련 전역변수
+		var MasterGrid;
+		var MasterGridCols;
+		
+		$(document).ready(
+				function() {
+					//그리드 생성 및 셋팅
+					setGrid(); 
+					
+					setEvent();
+				}
+			);
+		
+		function setGrid(){
+			MasterGridCols = [ 
+				{name : 'ORD_TYP_NM'	,fieldName : 'ORD_TYP_NM'	,header : {text : 'TYPE'}			,editable : false  ,width : 100	,styleName : 'left-column'},
+				// 각각 한줄 한줄이 그리드에서 열을 나타냄
+				//{name : ''	,fieldName : ''	,header : {text : '화면에나옴'}	,editable : false   ,width : 100	},
+				{name : 'BL_NO'		 	,fieldName : 'BL_NO'		,header : {text	: 'B/L NO'}			,editable : false  ,width : 150	}
+				
+			];
+			
+			//그리드 생성 및 옵션 셋팅
+			MasterGrid = gfnInitgrid($("#MasterGrid"), MasterGridCols);
+			
+		} // setGrid End
+		
+		function setEvent(){
+			
+			//조회
+		    $("#btn_search").on("click", function(){	
+		    	funcSearch();
+    		}); 
+			
+			//엑셀
+		    $("#btn_excel").on("click", function(){
+		    	funcExcel();
+		    });
+			
+		 	// 저장
+		    $("#btn_save").on("click", function(){
+		    	funcSave();
+		    });
+			
+		}
+		
+		
+		function funcSearch() {
+			//그리드 초기화
+		   	MasterGrid.prv.clearRows();
+			
+		   	var ar = [
+   			 			$("#idName값"),
+   			 			$("#SRC_CUST_CD"),
+						$("#S_YEAR")
+					  ];
+              
+   			 var searchParm = fn_getJsonParamBox(ar); 
+			
+		    //파라미터 : 쿼리ID, 조회조건, provider, column, 화면코드, callback함수(생략가능), "조회되었습니다."알림창 유무 Y/N(default:Y)
+		    gfnSearchMsg("SearchList", searchParm, MasterGrid.prv, MasterGridCols, pgmCd);
+		}
+		
+		
+		
+		function funcSave(){
+			
+			MasterGrid.grd.commit();
+			
+			var urlStr = "/WMSCODE050Save.do"; // controller 주소
+						
+			var jRowsData = gfnSaveData(MasterGrid); // 이게 선택된거 데이터들 가져오는거 일듯 
+				
+			var saveData = {"savedstMs": jRowsData };
+		
+			gfnSaveConfirm(urlStr, saveData);
+			
+		}
+		
+		
+		//엑셀
+		function funcExcel(){
+			gfnExcel(MasterGrid.grd,"화면이름");
+		}
+
+
+	</script>
+	
+<!-- <div layout:fragment="content"> 끝 -->
+</div>
+
+</html>

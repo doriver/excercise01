@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>Insert title here</title>
+<script src="../js/jquery-2.2.4.min.js"></script> 
+	<script type="text/javascript"> 
+		$(document).ready(function() {
+			//웹페이지가 로드가 완료 후에 해당 함수를 실행합니다.
+			alert('1'); 
+			
+			/*
+			$("#noHypon").change(function() {
+				let text = $("#noHypon").val();
+				let result = '';
+				result += text.substring(0,4);
+				result += "-";
+				result += text.substring(4);
+				
+				$("#hypon").val(result);
+			});
+			
+			*/
+			 
+		});
+		
+		function changeContent() {
+			$('.hello').html('바보'); 
+		}
+		
+		function stylePlus() {
+			$('.hello').css('color', 'red');
+		}
+		
+		function hypon() {
+			let text = $("#noHypon").val();
+			let result = '';
+			result += text.substring(0,4);
+			result += "-";
+			result += text.substring(4);
+			
+			$("#hypon").val(result);
+		}
+		
+		
+	</script> 
+</head>
+<body>
+
+	<button onclick="changeContent()">내용변경</button>
+	<button onclick="stylePlus()">스타일</button>
+	
+	<p class="hello">안녕</p>
+	
+	<div>
+		하이픈
+		<input type="text" id="hypon"/>
+	</div>
+	<div>
+		노하이픈
+		<input type="text" id="noHypon" oninput="hypon()"/>
+		
+	</div>
+
+	<div>
+		전체 포커스 	
+		<input type="text" onfocus="this.select()"/>
+		
+		안되는거
+		<input type="text" />
+	
+	</div>
+	
+</body>
+</html>
